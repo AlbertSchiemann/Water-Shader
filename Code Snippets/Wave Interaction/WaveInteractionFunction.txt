@@ -1,0 +1,27 @@
+fixed2 AdjustedWave(fixed2 position, fixed2 direction1, fixed2 direction2, half amplitude1, half amplitude2)
+{
+    half dotResult = dot(normalize(direction1), normalize(direction2));
+    if(dotResult > 0)
+    {
+        amplitude1 += amplitude2 * dotResult;
+    }
+    else
+    {
+        amplitude1 -= amplitude2 * dotResult;
+    }
+    
+    return GerstnerWave(position, direction1, amplitude1, ...);
+}
+
+fixed2 AdjustedWave(fixed2 position, fixed2 direction, half amplitude, half frequency, half phase, half speed, fixed2[] otherDirections, half[] otherAmplitudes)
+{
+    half totalAmplitude = amplitude;
+    
+    for (int i = 0; i < otherDirections.Length; i++)
+    {
+        half dotResult = dot(normalize(direction), normalize(otherDirections[i]));
+        totalAmplitude += (dotResult > 0) ? otherAmplitudes[i] * dotResult : -otherAmplitudes[i] * dotResult;
+    }
+
+    return GerstnerWave(position, direction, totalAmplitude, frequency, phase, speed);
+}

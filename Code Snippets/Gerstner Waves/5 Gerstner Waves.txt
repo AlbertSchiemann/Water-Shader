@@ -1,0 +1,101 @@
+Shader "Custom/Final Water Shader"
+{
+    Properties
+    {
+        _Color ("Color", Color) = (1,1,1,1)
+        _MainTex ("Albedo (RGB)", 2D) = "white" {}
+        _Glossiness ("Smoothness", Range(0,1)) = 0.5
+        _Metallic ("Metallic", Range(0,1)) = 0.0
+        _FresnelPower("Fresnel Power", Range(1,5)) = 2.0
+        _FresnelIntensity("Fresnel Intensity", Range(0,1)) = 0.6
+
+        // Gerstner Wave Properties for five waves
+        _Amplitude1 ("Wave 1 Amplitude", Range(0, 2)) = 0.5
+        _Frequency1 ("Wave 1 Frequency", Range(0, 5)) = 2.0
+        _Phase1 ("Wave 1 Phase", Range(0, 6.28)) = 1.0
+        _Speed1 ("Wave 1 Speed", Range(0, 2)) = 1.2
+        
+        _Amplitude2 ("Wave 2 Amplitude", Range(0, 2)) = 0.35
+        _Frequency2 ("Wave 2 Frequency", Range(0, 5)) = 2.5
+        _Phase2 ("Wave 2 Phase", Range(0, 6.28)) = 2.0
+        _Speed2 ("Wave 2 Speed", Range(0, 2)) = 1.3
+
+        _Amplitude3 ("Wave 3 Amplitude", Range(0, 2)) = 0.45
+        _Frequency3 ("Wave 3 Frequency", Range(0, 5)) = 3.0
+        _Phase3 ("Wave 3 Phase", Range(0, 6.28)) = 0.5
+        _Speed3 ("Wave 3 Speed", Range(0, 2)) = 1.5
+
+        _Amplitude4 ("Wave 4 Amplitude", Range(0, 2)) = 0.3
+        _Frequency4 ("Wave 4 Frequency", Range(0, 5)) = 3.0
+        _Phase4 ("Wave 4 Phase", Range(0, 6.28)) = 0.5
+        _Speed4 ("Wave 4 Speed", Range(0, 2)) = 1.5
+
+        _Amplitude5 ("Wave 5 Amplitude", Range(0, 2)) = 0.4
+        _Frequency5 ("Wave 5 Frequency", Range(0, 5)) = 2.8
+        _Phase5 ("Wave 5 Phase", Range(0, 6.28)) = 1.8
+        _Speed5 ("Wave 5 Speed", Range(0, 2)) = 1.4
+    }
+
+    SubShader
+    {
+        Tags { "RenderType" = "Transparent" "Queue" = "Transparent"}
+        LOD 200
+
+        CGPROGRAM
+        #pragma surface surf Standard fullforwardshadows
+        #pragma target 3.0
+
+        sampler2D _MainTex;
+
+        struct Input
+        {
+            float2 uv_MainTex;
+            float3 worldPos;
+            float3 viewDir;
+        };
+
+        half _Glossiness;
+        half _Metallic;
+        fixed4 _Color;
+        half _FresnelPower;
+        half _FresnelIntensity;
+
+        // Gerstner Wave Variables for five waves
+        half _Amplitude1, _Amplitude2, _Amplitude3, _Amplitude4, _Amplitude5;
+        half _Frequency1, _Frequency2, _Frequency3, _Frequency4, _Frequency5;
+        half _Phase1, _Phase2, _Phase3, _Phase4, _Phase5;
+        half _Speed1, _Speed2, _Speed3, _Speed4, _Speed5;
+
+        fixed2 GerstnerWave(fixed2 position, fixed2 direction, half amplitude, half frequency, half phase, half speed)
+        {
+            fixed2 result;
+            float wave = _Time.y * speed + frequency * dot(direction, position) + phase;
+            result.x = direction.x * amplitude * sin(wave);
+            result.y = amplitude * cos(wave);
+            return result;
+        }
+
+        void surf (Input IN, inout SurfaceOutputStandard o)
+        {
+            // Gerstner Waves with added randomness
+            fixed3 finalWavePosition = IN.worldPos;
+            finalWavePosition.xy += GerstnerWave(IN.worldPos.xz, float2(1, 0.5) * sin(_Time.y * 0.2), _Amplitude1, _Frequency1, _Phase1, _Speed1);
+            finalWavePosition.xy += GerstnerWave(IN.worldPos.xz, float2(0.7, 1.3) * sin(_Time.y * 0.3), _Amplitude2, _Frequency2, _Phase2, _Speed2);
+            finalWavePosition.xy += GerstnerWave(IN.worldPos.xz, float2(-0.6, 0.8) * sin(_Time.y * 0.4), _Amplitude3, _Frequency3, _Phase3, _Speed3);
+            finalWavePosition.xy += GerstnerWave(IN.worldPos.xz, float2(0.9, -0.5) * sin(_Time.y * 0.5), _Amplitude4, _Frequency4, _Phase4, _Speed4);
+            finalWavePosition.xy += GerstnerWave(IN.worldPos.xz, float2(-0.8, -0.6) * sin(_Time.y * 0.6), _Amplitude5, _Frequency5, _Phase5, _Speed5);
+
+            fixed2 uv = IN.uv_MainTex + finalWavePosition.xy * 0.01;  // Adding a small multiplier to control the UV distortion
+            fixed4 c = tex2D(_MainTex, uv) * _Color;
+
+            half fresnel = pow(1.0 - dot(normalize(IN.viewDir), o.Normal), _FresnelPower);
+            o.Albedo = lerp(c.rgb, _Color.rgb * _FresnelIntensity, fresnel);
+            o.Metallic = _Metallic;
+            o.Smoothness = _Glossiness;
+            o.Alpha = c.a;
+            o.Normal = normalize(float3(0, 1, finalWavePosition.y));
+        }
+        ENDCG
+    }
+    FallBack "Diffuse"
+}

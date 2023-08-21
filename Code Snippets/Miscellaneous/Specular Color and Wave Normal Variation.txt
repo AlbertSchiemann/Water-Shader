@@ -1,0 +1,7 @@
+_SpecColor ("Specular Color", Color) = (1,1,1,1)
+o.Specular = _SpecColor.rgb;
+float2(1, 0.5) * (sin(_Time.y * 0.2) + 0.1 * tex2D(_NoiseTex, IN.uv_MainTex * 0.1).r)
+half fresnel = pow(1.0 - dot(normalize(IN.viewDir), ComputeNormal(IN.worldPos)), _FresnelPower);
+half fresnel = pow(1.0 - dot(normalize(IN.viewDir), ComputeNormal(IN.worldPos)), _FresnelPower);
+normal.x = waveOffset2.x - waveOffset1.x;
+normal.z = waveOffset2.y - waveOffset1.y;

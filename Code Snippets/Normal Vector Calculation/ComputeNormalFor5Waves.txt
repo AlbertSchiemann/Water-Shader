@@ -1,0 +1,15 @@
+fixed3 ComputeNormal(fixed3 worldPos)
+{
+    fixed2 waveOffset1 = GerstnerWave(worldPos.xz, float2(1, 0.5) * sin(_Time.y * 0.2), _Amplitude1, _Frequency1, _Phase1, _Speed1);
+    fixed2 waveOffset2 = GerstnerWave(worldPos.xz, float2(0.7, 1.3) * sin(_Time.y * 0.3), _Amplitude2, _Frequency2, _Phase2, _Speed2);
+    fixed2 waveOffset3 = GerstnerWave(worldPos.xz, float2(-0.6, 0.8) * sin(_Time.y * 0.4), _Amplitude3, _Frequency3, _Phase3, _Speed3);
+    fixed2 waveOffset4 = GerstnerWave(worldPos.xz, float2(0.9, -0.5) * sin(_Time.y * 0.5), _Amplitude4, _Frequency4, _Phase4, _Speed4);
+    fixed2 waveOffset5 = GerstnerWave(worldPos.xz, float2(-0.8, -0.6) * sin(_Time.y * 0.6), _Amplitude5, _Frequency5, _Phase5, _Speed5);
+
+    fixed3 normal;
+    normal.x = waveOffset1.x + waveOffset2.x + waveOffset3.x + waveOffset4.x + waveOffset5.x;
+    normal.y = 1;
+    normal.z = waveOffset1.y + waveOffset2.y + waveOffset3.y + waveOffset4.y + waveOffset5.y;
+
+    return normalize(normal);
+}

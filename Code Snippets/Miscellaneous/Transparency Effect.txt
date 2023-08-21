@@ -1,0 +1,26 @@
+Shader "Custom/Final Water Shader"
+{
+    // ... [Properties section remains unchanged]
+
+    SubShader
+    {
+        Tags { "RenderType" = "Transparent" "Queue" = "Transparent"}
+        LOD 200
+
+        Pass
+        {
+            Blend SrcAlpha OneMinusSrcAlpha  // This defines the blending mode
+            // ... [rest of the pass definition]
+        }
+
+        CGPROGRAM
+        // ... [rest of the CGPROGRAM section]
+
+        void surf (Input IN, inout SurfaceOutputStandard o)
+        {
+            // ... [surf function remains unchanged]
+        }
+        ENDCG
+    }
+    FallBack "Diffuse"
+}

@@ -1,0 +1,96 @@
+Shader "Custom/Final Water Shader"
+{
+    Properties
+    {
+        _Color ("Color", Color) = (1,1,1,1)
+        _MainTex ("Albedo (RGB)", 2D) = "white" {}
+        _Glossiness ("Smoothness", Range(0,1)) = 0.5
+        _Metallic ("Metallic", Range(0,1)) = 0.0
+
+        _FresnelPower("Fresnel Power", Range(1,5)) = 2.0
+        _FresnelIntensity("Fresnel Intensity", Range(0,1)) = 0.6
+
+        _Amplitude1 ("Wave 1 Amplitude", Range(0, 2)) = 0.5
+        _Frequency1 ("Wave 1 Frequency", Range(0, 5)) = 2.0
+        _Phase1 ("Wave 1 Phase", Range(0, 6.28)) = 1.0
+        _Speed1 ("Wave 1 Speed", Range(0, 2)) = 1.0
+
+        _Amplitude2 ("Wave 2 Amplitude", Range(0, 2)) = 0.4
+        _Frequency2 ("Wave 2 Frequency", Range(0, 5)) = 2.5
+        _Phase2 ("Wave 2 Phase", Range(0, 6.28)) = 1.5
+        _Speed2 ("Wave 2 Speed", Range(0, 2)) = 1.2
+
+        _Amplitude3 ("Wave 3 Amplitude", Range(0, 2)) = 0.3
+        _Frequency3 ("Wave 3 Frequency", Range(0, 5)) = 1.5
+        _Phase3 ("Wave 3 Phase", Range(0, 6.28)) = 2.0
+        _Speed3 ("Wave 3 Speed", Range(0, 2)) = 0.8
+    }
+
+    SubShader
+    {
+        Tags { "RenderType" = "Transparent" "Queue" = "Transparent"}
+        LOD 200
+
+        CGPROGRAM
+        #pragma surface surf Standard fullforwardshadows
+        #pragma target 3.0
+
+        sampler2D _MainTex;
+
+        struct Input
+        {
+            float2 uv_MainTex;
+            float3 worldPos;
+            float3 viewDir;
+        };
+
+        half _Glossiness;
+        half _Metallic;
+        fixed4 _Color;
+        half _FresnelPower;
+        half _FresnelIntensity;
+
+        half _Amplitude1, _Frequency1, _Phase1, _Speed1;
+        half _Amplitude2, _Frequency2, _Phase2, _Speed2;
+        half _Amplitude3, _Frequency3, _Phase3, _Speed3;
+
+        fixed3 GerstnerWave(float2 position, float2 direction, float amplitude, float frequency, float phase, float speed)
+        {
+            float wavePhase = phase + speed * _Time.y;
+            float2 waveDir = normalize(direction);
+            float dotProd = dot(waveDir, position);
+
+            float sinVal = sin(frequency * dotProd + wavePhase);
+            float cosVal = cos(frequency * dotProd + wavePhase);
+
+            return fixed3(waveDir.x * amplitude * sinVal, amplitude * cosVal, waveDir.y * amplitude * sinVal);
+        }
+
+        void surf (Input IN, inout SurfaceOutputStandard o)
+        {
+            // Gerstner Waves
+            fixed3 finalWave = float3(0,0,0);
+            finalWave += GerstnerWave(IN.worldPos.xz, float2(1, 0), _Amplitude1, _Frequency1, _Phase1, _Speed1);
+            finalWave += GerstnerWave(IN.worldPos.xz, float2(0.7, 0.7), _Amplitude2, _Frequency2, _Phase2, _Speed2);
+            finalWave += GerstnerWave(IN.worldPos.xz, float2(0, 1), _Amplitude3, _Frequency3, _Phase3, _Speed3);
+
+            // Apply waves to UV
+            fixed2 uv = IN.uv_MainTex;
+            uv += finalWave.xz;
+
+            // Albedo and Fresnel Calculation
+            fixed4 c = tex2D (_MainTex, uv) * _Color;
+            half fresnel = pow(1.0 - dot(normalize(IN.viewDir), o.Normal), _FresnelPower);
+            o.Albedo = lerp(c.rgb, _Color.rgb * _FresnelIntensity, fresnel);
+
+            // Metallic, smoothness, and normals
+            o.Metallic = _Metallic;
+            o.Smoothness = _Glossiness;
+            o.Alpha = c.a;
+            o.Normal = normalize(float3(0, 1, finalWave.y));
+        }
+        ENDCG
+    }
+
+    FallBack "Diffuse"
+}

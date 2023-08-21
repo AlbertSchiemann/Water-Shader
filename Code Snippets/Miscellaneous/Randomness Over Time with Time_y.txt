@@ -1,0 +1,69 @@
+Shader "Custom/Gerstner3"
+{
+    Properties
+    {
+        _Color("Color", Color) = (1,1,1,1)
+        _MainTex("Albedo (RGB)", 2D) = "white" {}
+        _Glossiness("Smoothness", Range(0,1)) = 0.5
+        _Metallic("Metallic", Range(0,1)) = 0.0
+        _FresnelPower("Fresnel Power", Range(1,5)) = 2.0
+        _FresnelIntensity("Fresnel Intensity", Range(0,1)) = 0.6
+        // Gerstner Wave Properties...
+        // (same as before)
+    }
+
+    SubShader
+    {
+        Tags { "RenderType" = "Transparent" "Queue" = "Transparent"}
+        LOD 200
+
+        CGPROGRAM
+        #pragma surface surf Standard fullforwardshadows
+        #pragma target 3.0
+
+        sampler2D _MainTex;
+        // Variables...
+        // (same as before)
+
+        fixed2 GerstnerWave(fixed2 position, fixed2 direction, half amplitude, half frequency, half phase, half speed)
+        {
+            fixed2 result;
+            float wave = _Time.y * speed + frequency * dot(direction, position) + phase + sin(_Time.y);
+            result.x = direction.x * amplitude * sin(wave);
+            result.y = amplitude * cos(wave);
+            return result;
+        }
+
+        void surf(Input IN, inout SurfaceOutputStandard o)
+        {
+            // Adjust the speed and phase over time using the _Time.y component
+            half dynamicSpeed1 = _Speed1 + sin(_Time.y) * 0.1;
+            half dynamicPhase1 = _Phase1 + cos(_Time.y) * 0.1;
+
+            half dynamicSpeed2 = _Speed2 + sin(_Time.y * 1.1) * 0.1;
+            half dynamicPhase2 = _Phase2 + cos(_Time.y * 1.1) * 0.1;
+
+            half dynamicSpeed3 = _Speed3 + sin(_Time.y * 1.2) * 0.1;
+            half dynamicPhase3 = _Phase3 + cos(_Time.y * 1.2) * 0.1;
+
+            half dynamicSpeed4 = _Speed4 + sin(_Time.y * 1.3) * 0.1;
+            half dynamicPhase4 = _Phase4 + cos(_Time.y * 1.3) * 0.1;
+
+            half dynamicSpeed5 = _Speed5 + sin(_Time.y * 1.4) * 0.1;
+            half dynamicPhase5 = _Phase5 + cos(_Time.y * 1.4) * 0.1;
+
+            // Use the dynamic speed and phase in the GerstnerWave calculations
+            fixed3 finalWavePosition = IN.worldPos;
+            finalWavePosition.xy += GerstnerWave(IN.worldPos.xz, float2(1, 0.5), _Amplitude1, _Frequency1, dynamicPhase1, dynamicSpeed1);
+            finalWavePosition.xy += GerstnerWave(IN.worldPos.xz, float2(0.7, 1.3), _Amplitude2, _Frequency2, dynamicPhase2, dynamicSpeed2);
+            finalWavePosition.xy += GerstnerWave(IN.worldPos.xz, float2(-0.6, 0.8), _Amplitude3, _Frequency3, dynamicPhase3, dynamicSpeed3);
+            finalWavePosition.xy += GerstnerWave(IN.worldPos.xz, float2(0.9, -0.5), _Amplitude4, _Frequency4, dynamicPhase4, dynamicSpeed4);
+            finalWavePosition.xy += GerstnerWave(IN.worldPos.xz, float2(-0.8, -0.6), _Amplitude5, _Frequency5, dynamicPhase5, dynamicSpeed5);
+
+            // Rest of the surf function...
+            // (same as before)
+        }
+        ENDCG
+    }
+    FallBack "Diffuse"
+}

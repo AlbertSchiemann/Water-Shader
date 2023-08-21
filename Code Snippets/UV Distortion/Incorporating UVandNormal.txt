@@ -1,0 +1,79 @@
+Shader "Custom/Water Shader"
+{
+    Properties
+    {
+        // ... [All your properties remain the same]
+
+    }
+    SubShader
+    {
+        Tags { "RenderType" = "Transparent" "Queue" = "Transparent"}
+        LOD 200
+
+        CGPROGRAM
+        #pragma surface surf Standard fullforwardshadows
+        #pragma target 3.0
+
+        sampler2D _MainTex;
+
+        struct Input
+        {
+            float2 uv_MainTex;
+            float3 worldPos;
+            float3 viewDir;
+        };
+
+        // ... [All your wave properties remain the same]
+
+        fixed2 GerstnerWave(fixed2 position, fixed2 direction, half amplitude, half frequency, half phase, half speed)
+        {
+            fixed2 result;
+            float wave = _Time.y * speed + frequency * dot(direction, position) + phase;
+            result.x = direction.x * amplitude * sin(wave);
+            result.y = amplitude * cos(wave);
+            return result;
+        }
+
+        fixed2 EnhancedUV(fixed2 uv, fixed3 worldPos)
+        {
+            fixed2 distortion = float2(0, 0);
+
+            distortion += GerstnerWave(worldPos.xz, float2(1, 0.5) * sin(_Time.y * 0.25), _Amplitude1, _Frequency1, _Phase1, _Speed1);
+            distortion += GerstnerWave(worldPos.xz, float2(0.7, 1.3) * sin(_Time.y * 0.35), _Amplitude2, _Frequency2, _Phase2, _Speed2);
+
+            distortion.x += sin(worldPos.x + _Time.y * _WaveSpeed) * 0.02;
+            distortion.y += cos(worldPos.z + _Time.y * _WaveSpeed) * 0.02;
+
+            return uv + distortion * 0.01;
+        }
+
+        fixed3 ComputeNormal(fixed3 worldPos)
+        {
+            fixed2 waveOffset1 = GerstnerWave(worldPos.xz, float2(1, 0.5) * sin(_Time.y * 0.2), _Amplitude1, _Frequency1, _Phase1, _Speed1);
+            fixed2 waveOffset2 = GerstnerWave(worldPos.xz, float2(0.7, 1.3) * sin(_Time.y * 0.3), _Amplitude2, _Frequency2, _Phase2, _Speed2);
+            fixed2 waveOffset3 = GerstnerWave(worldPos.xz, float2(-0.6, 0.8) * sin(_Time.y * 0.4), _Amplitude3, _Frequency3, _Phase3, _Speed3);
+
+            fixed3 normal;
+            normal.x = waveOffset1.x + waveOffset2.x + waveOffset3.x;
+            normal.y = 1;
+            normal.z = waveOffset1.y + waveOffset2.y + waveOffset3.y;
+
+            return normalize(normal);
+        }
+
+        void surf (Input IN, inout SurfaceOutputStandard o)
+        {
+            fixed2 uv = EnhancedUV(IN.uv_MainTex, IN.worldPos);
+            fixed4 c = tex2D(_MainTex, uv) * _Color;
+            half fresnel = pow(1.0 - dot(normalize(IN.viewDir), ComputeNormal(IN.worldPos)), _FresnelPower);
+
+            o.Albedo = lerp(c.rgb, _Color.rgb * _FresnelIntensity, fresnel);
+            o.Metallic = _Metallic;
+            o.Smoothness = _Glossiness;
+            o.Alpha = c.a;
+            o.Normal = ComputeNormal(IN.worldPos);
+        }
+        ENDCG
+    }
+    FallBack "Diffuse"
+}

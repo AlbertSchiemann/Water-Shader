@@ -1,0 +1,47 @@
+fixed3 GerstnerWave(float2 position, float2 direction, float amplitude, float frequency, float phase, float speed)
+{
+    float wavePhase = phase + speed * _Time.y;
+    float2 waveDir = normalize(direction);
+    float dotProd = dot(waveDir, position);
+    
+    float sinVal = sin(frequency * dotProd + wavePhase);
+    float cosVal = cos(frequency * dotProd + wavePhase);
+    
+    return fixed3(waveDir.x * amplitude * sinVal, amplitude * cosVal, waveDir.y * amplitude * sinVal);
+}
+fixed3 finalWave = float3(0,0,0);
+
+// Example for 3 waves
+finalWave += GerstnerWave(IN.worldPos.xz, float2(1, 0), _Amplitude1, _Frequency1, _Phase1, _Speed1);
+finalWave += GerstnerWave(IN.worldPos.xz, float2(0.7, 0.7), _Amplitude2, _Frequency2, _Phase2, _Speed2);
+finalWave += GerstnerWave(IN.worldPos.xz, float2(0, 1), _Amplitude3, _Frequency3, _Phase3, _Speed3);
+
+_Amplitude1 ("Wave 1 Amplitude", Range(0, 2)) = 0.5
+_Frequency1 ("Wave 1 Frequency", Range(0, 5)) = 2.0
+_Phase1 ("Wave 1 Phase", Range(0, 6.28)) = 1.0
+_Speed1 ("Wave 1 Speed", Range(0, 2)) = 1.0
+
+_Amplitude2 ("Wave 2 Amplitude", Range(0, 2)) = 0.4
+_Frequency2 ("Wave 2 Frequency", Range(0, 5)) = 2.5
+_Phase2 ("Wave 2 Phase", Range(0, 6.28)) = 1.5
+_Speed2 ("Wave 2 Speed", Range(0, 2)) = 1.2
+
+_Amplitude3 ("Wave 3 Amplitude", Range(0, 2)) = 0.3
+_Frequency3 ("Wave 3 Frequency", Range(0, 5)) = 1.5
+_Phase3 ("Wave 3 Phase", Range(0, 6.28)) = 2.0
+_Speed3 ("Wave 3 Speed", Range(0, 2)) = 0.8
+
+_Amplitude1 ("Wave 1 Amplitude", Range(0, 2)) = 0.5
+_Frequency1 ("Wave 1 Frequency", Range(0, 5)) = 2.0
+_Phase1 ("Wave 1 Phase", Range(0, 6.28)) = 1.0
+_Speed1 ("Wave 1 Speed", Range(0, 2)) = 1.0
+
+_Amplitude2 ("Wave 2 Amplitude", Range(0, 2)) = 0.4
+_Frequency2 ("Wave 2 Frequency", Range(0, 5)) = 2.5
+_Phase2 ("Wave 2 Phase", Range(0, 6.28)) = 1.5
+_Speed2 ("Wave 2 Speed", Range(0, 2)) = 1.2
+
+_Amplitude3 ("Wave 3 Amplitude", Range(0, 2)) = 0.3
+_Frequency3 ("Wave 3 Frequency", Range(0, 5)) = 1.5
+_Phase3 ("Wave 3 Phase", Range(0, 6.28)) = 2.0
+_Speed3 ("Wave 3 Speed", Range(0, 2)) = 0.8

@@ -1,0 +1,24 @@
+_Color("Rim Color", Color) = (1,1,1,1)
+_RimPower("Rim Power", Range(0,6)) = 3
+_RimIntensity("Rim Intensity", Range(0,2)) = 0.5
+
+void surf(Input IN, inout SurfaceOutputStandard o)
+{
+    fixed2 uv = EnhancedUV(IN.uv_MainTex, IN.worldPos);
+    fixed4 c = tex2D(_MainTex, uv) * _Color;
+    half fresnel = pow(1.0 - dot(normalize(IN.viewDir), ComputeNormal(IN.worldPos)), _FresnelPower);
+    
+    // Calculate the rim lighting effect
+    half rim = 1.0 - saturate(dot(normalize(IN.viewDir), o.Normal));
+    rim = _RimIntensity * pow(rim, _RimPower);
+    
+    o.Albedo = lerp(c.rgb, _Color.rgb * _FresnelIntensity, fresnel) + rim * _RimColor.rgb;
+    o.Metallic = _Metallic;
+    o.Smoothness = _Glossiness;
+    o.Alpha = c.a;
+    o.Normal = ComputeNormal(IN.worldPos);
+}
+
+fixed4 _RimColor;
+half _RimPower;
+half _RimIntensity;

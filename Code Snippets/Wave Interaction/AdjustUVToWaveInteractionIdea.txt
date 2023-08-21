@@ -1,0 +1,23 @@
+fixed2 EnhancedUV(fixed2 uv, fixed3 worldPos)
+{
+    fixed2 distortion = float2(0, 0);
+
+    // Adjust the first wave with respect to the second wave
+    distortion += AdjustedWave(worldPos.xz, 
+                               float2(1, 0.5) * sin(_Time.y * 0.25), 
+                               float2(0.7, 1.3) * sin(_Time.y * 0.35), 
+                               _Amplitude1, _Amplitude2, 
+                               _Frequency1, _Phase1, _Speed1);
+
+    // Adjust the second wave with respect to the first wave
+    distortion += AdjustedWave(worldPos.xz, 
+                               float2(0.7, 1.3) * sin(_Time.y * 0.35), 
+                               float2(1, 0.5) * sin(_Time.y * 0.25), 
+                               _Amplitude2, _Amplitude1, 
+                               _Frequency2, _Phase2, _Speed2);
+
+    distortion.x += sin(worldPos.x + _Time.y * _WaveSpeed) * 0.02;
+    distortion.y += cos(worldPos.z + _Time.y * _WaveSpeed) * 0.02;
+
+    return uv + distortion * 0.01;
+}
